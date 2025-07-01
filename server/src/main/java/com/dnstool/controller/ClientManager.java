@@ -7,8 +7,8 @@ import java.util.Scanner;
 
 public class ClientManager {
 
-    private PrintWriter out;
-    private Scanner in;
+    private final PrintWriter out;
+    private final Scanner in;
 
     public ClientManager(Socket client) {
         try {
