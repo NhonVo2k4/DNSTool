@@ -1,33 +1,59 @@
 package com.dnstool.controller;
 
+import com.dnstool.service.ServiceManager;
+
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.util.Scanner;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 
 public class ClientManager {
 
-    private final PrintWriter out;
-    private final Scanner in;
+    private final SocketChannel client;
+    private final ByteBuffer buffer;
+    private final int read;
 
-    public ClientManager(Socket client) {
+    public ClientManager(SelectionKey key) {
+        this.client = (SocketChannel) key.channel();
+        buffer = ByteBuffer.allocate(1024);
+
         try {
-            out = new PrintWriter(client.getOutputStream(),true);
-            in = new Scanner(client.getInputStream());
+            read = client.read(buffer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    // Hàm xử lý dữ liệu và phản hồi với client. Blocking IO.
+    public void handles() {
+        try {
+            if (read == -1) {
+                client.close();
+                System.out.println("Client disconnected");
+            } else {
+
+                // Nhận dữ liệu
+                String request = receiveData();
+
+                // Xử lý
+                ServiceManager serviceManager = new ServiceManager(request);
+
+                //Trả kết quả.
+                sendData();
+
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // Hàm xử lý dữ liệu và phản hồi với client. Blocking IO.
-    public void start() {
+    private void sendData() {
 
-        // Nhận dữ liệu từ client
-        String data = in.nextLine();
-
-        System.out.println("Client gửi thông báo : " + data);
-
-        //Gửi phản hồi cho client
-        out.println("Xin chào client.");
     }
+
+    private String receiveData() {
+        return "";
+    }
+
 }

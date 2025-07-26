@@ -1,44 +1,71 @@
 package com.dnstool.controller;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.util.Scanner;
+import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 
 public class ClientManager {
 
-    private final PrintWriter out;
-    private final Scanner in;
+    private Selector selector;
+    private final SocketChannel client;
 
     public ClientManager() {
         int port = 9999;
         String host = "localhost";
         try {
 
-            // Kết nối tới server.
-            Socket server = new Socket(host, port);
+            client = SocketChannel.open(new InetSocketAddress(host, port));
 
-            //mở cổng gửi và nhận dữ liệu.
-            in = new Scanner(server.getInputStream());
-            out = new PrintWriter(server.getOutputStream(), true);
+            client.configureBlocking(false);
+
+            Selector selector = Selector.open();
+            client.register(selector, SelectionKey.OP_WRITE);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void handles() {
+    public void run() {
         while (true) {
+            try {
+                selector.select();
+                Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
 
-            Scanner keyboard = new Scanner(System.in);
+                handles(iter);
 
-            System.out.print("Nhập tin nhắn của bạn: ");
+                client.close();
 
-            String message = keyboard.nextLine();
-
-            out.println(message);
-
-            System.out.println(in.nextLine());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
+
+    private void handles(Iterator<SelectionKey> iter) {
+        while (iter.hasNext()) {
+            SelectionKey key = iter.next();
+            iter.remove();
+
+            if (key.isWritable()) {
+
+                // Nhập yêu cầu
+                String request = "";
+
+                //Gửi yêu cầu
+
+            } else if (key.isReadable()) {
+                // Nhận phản hổi
+
+
+                //Xử lý
+
+            }
+        }
+    }
+
+
 }
